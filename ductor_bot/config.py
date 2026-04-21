@@ -304,8 +304,9 @@ class SceneConfig(BaseModel):
     # #63: when True, the user's message gets a stage-based reaction that
     # updates as the agent works (thinking/tool/system) and clears on
     # completion. Overrides ``seen_reaction`` so they do not fight over
-    # the same emoji slot. Default False preserves pre-existing behaviour.
-    status_reaction: bool = False
+    # the same emoji slot. Default on — gives users immediate visual
+    # feedback that the agent is working.
+    status_reaction: bool = True
     technical_footer: bool = False
 
 

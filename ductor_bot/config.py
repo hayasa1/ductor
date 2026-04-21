@@ -258,6 +258,21 @@ class WebhookConfig(BaseModel):
     rate_limit_per_minute: int = 30
 
 
+class TranscriptionConfig(BaseModel):
+    """External transcription hooks for audio + video (#66).
+
+    Empty strings preserve the built-in strategies in the bundled tool
+    scripts (OpenAI Whisper API → local whisper CLI → whisper.cpp).
+    When a value is set, the bot exports it via
+    ``DUCTOR_TRANSCRIBE_COMMAND`` / ``DUCTOR_VIDEO_TRANSCRIBE_COMMAND``
+    and the tool script invokes the external command first (falling
+    back to the built-ins on failure).
+    """
+
+    audio_command: str = ""
+    video_command: str = ""
+
+
 class NotificationTarget(BaseModel):
     """A chat/topic to route startup or upgrade notifications to (#64).
 
@@ -392,6 +407,7 @@ class AgentConfig(BaseModel):
     tasks: TasksConfig = Field(default_factory=TasksConfig)
     scene: SceneConfig = Field(default_factory=SceneConfig)
     notifications: NotificationsConfig = Field(default_factory=NotificationsConfig)
+    transcription: TranscriptionConfig = Field(default_factory=TranscriptionConfig)
     user_timezone: str = ""
     language: str = "en"
     update_check: bool = True

@@ -155,6 +155,11 @@
         ]
     },
 
+    "transcription": {
+        "audio_command": "",
+        "video_command": ""
+    },
+
     "timeouts": {
         "normal": 600.0,
         "background": 1800.0,

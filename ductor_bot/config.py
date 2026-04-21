@@ -94,6 +94,15 @@ _DEFAULT_FLUSH_PROMPT = (
     "nothing new worth saving, reply exactly: FLUSH_NOOP"
 )
 
+_DEFAULT_MEMORY_REFLECTION_PROMPT = (
+    "## MEMORY REFLECTION\n"
+    "Review the last several messages in this conversation.\n"
+    "Check: were there any new decisions, corrections, error solutions, user "
+    "preferences, or important facts that you did NOT yet write to memory?\n"
+    "If yes -- update memory_system/MAINMEMORY.md silently.\n"
+    "If everything is already recorded -- do nothing."
+)
+
 
 class HeartbeatTarget(BaseModel):
     """A specific chat/topic to send heartbeat checks to.
@@ -157,6 +166,14 @@ class MemoryFlushConfig(BaseModel):
     enabled: bool = True
     flush_prompt: str = _DEFAULT_FLUSH_PROMPT
     dedup_seconds: int = 300
+
+
+class MemoryReflectionConfig(BaseModel):
+    """Settings for the periodic memory reflection hook (#65)."""
+
+    enabled: bool = False
+    every_n_messages: int = 10
+    prompt: str = _DEFAULT_MEMORY_REFLECTION_PROMPT
 
 
 class ImageConfig(BaseModel):
@@ -314,6 +331,7 @@ class AgentConfig(BaseModel):
     heartbeat: HeartbeatConfig = Field(default_factory=HeartbeatConfig)
     cleanup: CleanupConfig = Field(default_factory=CleanupConfig)
     memory_flush: MemoryFlushConfig = Field(default_factory=MemoryFlushConfig)
+    memory_reflection: MemoryReflectionConfig = Field(default_factory=MemoryReflectionConfig)
     webhooks: WebhookConfig = Field(default_factory=WebhookConfig)
     api: ApiConfig = Field(default_factory=ApiConfig)
     cli_parameters: CLIParametersConfig = Field(default_factory=CLIParametersConfig)

@@ -659,3 +659,28 @@ async def test_normal_abort_on_new_session_returns_empty(orch: Orchestrator) -> 
 
     result = await normal(orch, SessionKey(chat_id=1), "Hello")
     assert result.text == ""
+
+
+def test_is_invalid_session_matches_no_conversation_found() -> None:
+    """#81: Claude CLI post-update error 'No conversation found with session ID'
+    must be detected as a stale session so recovery/retry can kick in.
+
+    Regression for the marker extension in ``_INVALID_SESSION_MARKERS``."""
+    from ductor_bot.orchestrator.flows import _is_invalid_session
+
+    response = AgentResponse(
+        result="No conversation found with session ID: abc123",
+        is_error=True,
+    )
+    assert _is_invalid_session(response) is True
+
+
+def test_is_invalid_session_case_insensitive() -> None:
+    """#81 defensive: marker match is lowercase-normalized."""
+    from ductor_bot.orchestrator.flows import _is_invalid_session
+
+    response = AgentResponse(
+        result="NO CONVERSATION FOUND with session ID: XYZ",
+        is_error=True,
+    )
+    assert _is_invalid_session(response) is True

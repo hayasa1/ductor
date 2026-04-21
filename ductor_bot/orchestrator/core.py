@@ -282,6 +282,10 @@ class Orchestrator:
         """Return cached Gemini API-key mode status."""
         return self._providers.gemini_api_key_mode
 
+    def refresh_gemini_api_key_mode(self) -> bool:
+        """Force a fresh read of Gemini auth settings (bypasses the cache)."""
+        return self._providers.refresh_gemini_api_key_mode()
+
     @property
     def active_provider_name(self) -> str:
         """Human-readable name for the active CLI provider."""

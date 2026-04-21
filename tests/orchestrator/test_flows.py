@@ -228,12 +228,14 @@ async def test_normal_preserves_existing_session_target_on_restart(orch: Orchest
 
 async def test_normal_warns_for_gemini_api_key_mode_without_ductor_key(
     orch: Orchestrator,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     mock_execute = AsyncMock(return_value=_mock_response())
     object.__setattr__(orch._cli_service, "execute", mock_execute)
     orch._config.gemini_api_key = "null"
 
     orch._providers._gemini_api_key_mode = True
+    monkeypatch.setattr("ductor_bot.cli.auth.gemini_uses_api_key_mode", lambda: True)
     result = await normal(
         orch, SessionKey(chat_id=1), "Hello", model_override="gemini-3-pro-preview"
     )
@@ -245,12 +247,14 @@ async def test_normal_warns_for_gemini_api_key_mode_without_ductor_key(
 
 async def test_streaming_warns_for_gemini_api_key_mode_without_ductor_key(
     orch: Orchestrator,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     mock_streaming = AsyncMock(return_value=_mock_response())
     object.__setattr__(orch._cli_service, "execute_streaming", mock_streaming)
     orch._config.gemini_api_key = "null"
 
     orch._providers._gemini_api_key_mode = True
+    monkeypatch.setattr("ductor_bot.cli.auth.gemini_uses_api_key_mode", lambda: True)
     result = await normal_streaming(
         orch, SessionKey(chat_id=1), "Hello", model_override="gemini-3-pro-preview"
     )
@@ -271,6 +275,32 @@ async def test_normal_allows_gemini_api_key_mode_with_configured_key(orch: Orche
 
     assert result.text == "Gemini OK"
     mock_execute.assert_awaited_once()
+
+
+async def test_normal_recovers_when_gemini_auth_flipped_mid_session(
+    orch: Orchestrator,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """User switches Gemini CLI to oauth-personal without restarting ductor.
+
+    The cached api_key_mode is stale (True). When the warning path would fire,
+    we re-read settings.json; if the live value is False now, skip the warning
+    and let the provider call proceed — no restart required.
+    """
+    mock_execute = AsyncMock(return_value=_mock_response(result="Gemini OK"))
+    object.__setattr__(orch._cli_service, "execute", mock_execute)
+    orch._config.gemini_api_key = "null"
+
+    orch._providers._gemini_api_key_mode = True  # stale cache
+    monkeypatch.setattr("ductor_bot.cli.auth.gemini_uses_api_key_mode", lambda: False)
+
+    result = await normal(
+        orch, SessionKey(chat_id=1), "Hello", model_override="gemini-3-pro-preview"
+    )
+
+    assert result.text == "Gemini OK"
+    mock_execute.assert_awaited_once()
+    assert orch._providers._gemini_api_key_mode is False  # cache refreshed
 
 
 # -- streaming flow --

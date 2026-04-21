@@ -320,6 +320,12 @@ async def _gemini_missing_config_key_warning(
     if key and key.lower() not in NULLISH_TEXT_VALUES:
         return None
 
+    # Before emitting the warning, re-read settings.json: the user may have
+    # flipped auth mode (e.g. to oauth-personal) since the cache was seeded at
+    # startup. This avoids forcing a ductor restart for a simple auth flip.
+    if not orch.refresh_gemini_api_key_mode():
+        return None
+
     return OrchestratorResult(text=t("gemini.missing_key"))
 
 
